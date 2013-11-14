@@ -17,7 +17,7 @@
         android:gravity="center"
         android:textSize="1000sp"
         android:textColor="@color/black"
-        android:text="@string/timer_default" />
+        android:text="@string/timer_in_seconds" />
 
     <Button
         android:id="@id/start_button"

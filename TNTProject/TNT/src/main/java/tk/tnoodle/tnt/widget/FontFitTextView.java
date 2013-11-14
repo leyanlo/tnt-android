@@ -1,6 +1,7 @@
 package tk.tnoodle.tnt.widget;
 
 // from http://stackoverflow.com/a/7875656/759772
+// modified to also fit to height
 
 import android.content.Context;
 import android.content.res.TypedArray;

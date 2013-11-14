@@ -1,6 +1,7 @@
 package tk.tnoodle.tnt;
 
 import android.app.Activity;
+import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,6 +18,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+
+import tk.tnoodle.tnt.util.ViewUtil;
 
 public class SessionActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
@@ -114,12 +117,15 @@ public class SessionActivity extends ActionBarActivity
 
         private long startTime = 0;
 
+        private Resources res;
+
         // Views
+        private View rootView;
         private TextView timerView;
         private Button startButton;
 
-        Handler timerHandler = new Handler();
-        Runnable timerRunnable = new Runnable() {
+        private Handler timerHandler = new Handler();
+        private Runnable timerRunnable = new Runnable() {
             @Override
             public void run() {
                 long millis = System.currentTimeMillis() - startTime;
@@ -129,9 +135,9 @@ public class SessionActivity extends ActionBarActivity
                 millis = millis % 1000;
 
                 if (minutes == 0) {
-                    timerView.setText(String.format("%d:%02d", seconds, millis / 10));
+                    timerView.setText(getString(R.string.timer_in_seconds, seconds, millis / 10));
                 } else {
-                    timerView.setText(String.format("%d:%02d:%02d", minutes, seconds, millis / 10));
+                    timerView.setText(getString(R.string.timer_in_minutes, minutes, seconds, millis / 10));
                 }
 
                 timerHandler.postDelayed(this, 10);
@@ -156,67 +162,91 @@ public class SessionActivity extends ActionBarActivity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            final View rootView = inflater.inflate(R.layout.fragment_session, container, false);
+            res = getResources();
+            rootView = inflater.inflate(R.layout.fragment_session, container, false);
 //            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
 //            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
             timerView = (TextView) rootView.findViewById(R.id.timer);
+            timerView.setText(getString(R.string.timer_in_seconds, 0, 0));
             Typeface face = Typeface.createFromAsset(getActivity().getAssets(), "fonts/Digiface Regular.ttf");
             timerView.setTypeface(face);
             startButton = (Button) rootView.findViewById(R.id.start_button);
-            startButton.setOnTouchListener(new View.OnTouchListener() {
+            startButton.setOnTouchListener(getStartButtonOnTouchListener());
+            return rootView;
+        }
+
+        private View.OnTouchListener getStartButtonOnTouchListener() {
+            return new View.OnTouchListener() {
                 private boolean isCancelled;
 
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    switch (event.getActionMasked()) {
+                    switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
-                            timerView.setText(R.string.timer_default);
-                            timerView.setTextColor(getResources().getColor(R.color.green));
-                            startButton.setBackgroundColor(getResources().getColor(R.color.green));
+                            timerView.setText(getString(R.string.timer_in_seconds, 0, 0));
+                            timerView.setTextColor(res.getColor(R.color.green));
+                            startButton.setBackgroundColor(res.getColor(R.color.green));
                             isCancelled = false;
                             break;
                         case MotionEvent.ACTION_MOVE:
                             // For some reason, ACTION_CANCEL doesn't work :-(
-                            if (!isInView(v, Math.round(event.getRawX()), Math.round(event.getRawY()))) {
-                                timerView.setTextColor(getResources().getColor(R.color.black));
-                                startButton.setBackgroundColor(getResources().getColor(R.color.black));
+                            if (!ViewUtil.isEventInView(v, event)) {
+                                timerView.setTextColor(res.getColor(R.color.black));
+                                startButton.setBackgroundColor(res.getColor(R.color.black));
                                 isCancelled = true;
                             }
                             break;
                         case MotionEvent.ACTION_UP:
-                            timerView.setTextColor(getResources().getColor(R.color.black));
-                            startButton.setBackgroundColor(getResources().getColor(R.color.black));
+                            timerView.setTextColor(res.getColor(R.color.black));
+                            startButton.setBackgroundColor(res.getColor(R.color.black));
                             if (isCancelled) {
                                 break;
                             }
                             startTime = System.currentTimeMillis();
                             timerHandler.postDelayed(timerRunnable, 0);
                             startButton.setVisibility(View.INVISIBLE);
-                            rootView.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    timerHandler.removeCallbacks(timerRunnable);
-                                    startButton.setVisibility(View.VISIBLE);
-                                    rootView.setOnClickListener(null);
-                                }
-                            });
+                            rootView.setOnTouchListener(getRootViewOnTouchListener());
                             break;
                     }
                     return true;
                 }
-            });
-            return rootView;
+            };
         }
 
-        private boolean isInView(View view, int rx, int ry) {
-            int[] l = new int[2];
-            view.getLocationOnScreen(l);
-            int x = l[0];
-            int y = l[1];
-            int w = view.getWidth();
-            int h = view.getHeight();
+        private View.OnTouchListener getRootViewOnTouchListener() {
+            return new View.OnTouchListener() {
+                private boolean isCancelled;
+                private float startX;
+                private float startY;
 
-            return !(rx < x || rx > x + w || ry < y || ry > y + h);
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            rootView.setBackgroundColor(res.getColor(R.color.lt_gray));
+                            isCancelled = false;
+                            startX = event.getRawX();
+                            startY = event.getRawY();
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            if (ViewUtil.shouldCancel(res, event, startX, startY)) {
+                                rootView.setBackgroundColor(res.getColor(R.color.white));
+                                isCancelled = true;
+                            }
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            rootView.setBackgroundColor(res.getColor(R.color.white));
+                            if (isCancelled) {
+                                break;
+                            }
+                            timerHandler.removeCallbacks(timerRunnable);
+                            startButton.setVisibility(View.VISIBLE);
+                            rootView.setOnTouchListener(null);
+                            break;
+                    }
+                    return true;
+                }
+            };
         }
 
         @Override
