@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import tk.tnoodle.tnt.util.TimeUtil;
 import tk.tnoodle.tnt.util.ViewUtil;
 
 public class SessionActivity extends ActionBarActivity
@@ -129,17 +130,7 @@ public class SessionActivity extends ActionBarActivity
             @Override
             public void run() {
                 long millis = System.currentTimeMillis() - startTime;
-                int seconds = (int) (millis / 1000);
-                int minutes = seconds / 60;
-                seconds = seconds % 60;
-                millis = millis % 1000;
-
-                if (minutes == 0) {
-                    timerView.setText(getString(R.string.timer_in_seconds, seconds, millis / 10));
-                } else {
-                    timerView.setText(getString(R.string.timer_in_minutes, minutes, seconds, millis / 10));
-                }
-
+                timerView.setText(TimeUtil.getString(PlaceholderFragment.this, millis));
                 timerHandler.postDelayed(this, 10);
             }
         };
@@ -167,7 +158,7 @@ public class SessionActivity extends ActionBarActivity
 //            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
 //            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
             timerView = (TextView) rootView.findViewById(R.id.timer);
-            timerView.setText(getString(R.string.timer_in_seconds, 0, 0));
+            timerView.setText(TimeUtil.getString(PlaceholderFragment.this, 0));
             Typeface face = Typeface.createFromAsset(getActivity().getAssets(), "fonts/Digiface Regular.ttf");
             timerView.setTypeface(face);
             startButton = (Button) rootView.findViewById(R.id.start_button);
@@ -183,7 +174,7 @@ public class SessionActivity extends ActionBarActivity
                 public boolean onTouch(View v, MotionEvent event) {
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
-                            timerView.setText(getString(R.string.timer_in_seconds, 0, 0));
+                            timerView.setText(TimeUtil.getString(PlaceholderFragment.this, 0));
                             timerView.setTextColor(res.getColor(R.color.green));
                             startButton.setBackgroundColor(res.getColor(R.color.green));
                             isCancelled = false;
