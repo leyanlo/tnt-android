@@ -1,7 +1,9 @@
 package tk.tnoodle.tnt;
 
 import android.app.Activity;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
@@ -10,8 +12,10 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 public class SessionActivity extends ActionBarActivity
@@ -108,6 +112,32 @@ public class SessionActivity extends ActionBarActivity
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
 
+        private long startTime = 0;
+
+        // Views
+        private TextView timerView;
+        private Button startButton;
+
+        Handler timerHandler = new Handler();
+        Runnable timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                long millis = System.currentTimeMillis() - startTime;
+                int seconds = (int) (millis / 1000);
+                int minutes = seconds / 60;
+                seconds = seconds % 60;
+                millis = millis % 1000;
+
+                if (minutes == 0) {
+                    timerView.setText(String.format("%d:%02d", seconds, millis / 10));
+                } else {
+                    timerView.setText(String.format("%d:%02d:%02d", minutes, seconds, millis / 10));
+                }
+
+                timerHandler.postDelayed(this, 10);
+            }
+        };
+
         /**
          * Returns a new instance of this fragment for the given section
          * number.
@@ -125,11 +155,68 @@ public class SessionActivity extends ActionBarActivity
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_session, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
+                                 Bundle savedInstanceState) {
+            final View rootView = inflater.inflate(R.layout.fragment_session, container, false);
+//            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+//            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
+            timerView = (TextView) rootView.findViewById(R.id.timer);
+            Typeface face = Typeface.createFromAsset(getActivity().getAssets(), "fonts/Digiface Regular.ttf");
+            timerView.setTypeface(face);
+            startButton = (Button) rootView.findViewById(R.id.start_button);
+            startButton.setOnTouchListener(new View.OnTouchListener() {
+                private boolean isCancelled;
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getActionMasked()) {
+                        case MotionEvent.ACTION_DOWN:
+                            timerView.setText(R.string.timer_default);
+                            timerView.setTextColor(getResources().getColor(R.color.green));
+                            startButton.setBackgroundColor(getResources().getColor(R.color.green));
+                            isCancelled = false;
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            // For some reason, ACTION_CANCEL doesn't work :-(
+                            if (!isInView(v, Math.round(event.getRawX()), Math.round(event.getRawY()))) {
+                                timerView.setTextColor(getResources().getColor(R.color.black));
+                                startButton.setBackgroundColor(getResources().getColor(R.color.black));
+                                isCancelled = true;
+                            }
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            timerView.setTextColor(getResources().getColor(R.color.black));
+                            startButton.setBackgroundColor(getResources().getColor(R.color.black));
+                            if (isCancelled) {
+                                break;
+                            }
+                            startTime = System.currentTimeMillis();
+                            timerHandler.postDelayed(timerRunnable, 0);
+                            startButton.setVisibility(View.INVISIBLE);
+                            rootView.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    timerHandler.removeCallbacks(timerRunnable);
+                                    startButton.setVisibility(View.VISIBLE);
+                                    rootView.setOnClickListener(null);
+                                }
+                            });
+                            break;
+                    }
+                    return true;
+                }
+            });
             return rootView;
+        }
+
+        private boolean isInView(View view, int rx, int ry) {
+            int[] l = new int[2];
+            view.getLocationOnScreen(l);
+            int x = l[0];
+            int y = l[1];
+            int w = view.getWidth();
+            int h = view.getHeight();
+
+            return !(rx < x || rx > x + w || ry < y || ry > y + h);
         }
 
         @Override
