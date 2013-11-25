@@ -206,30 +206,10 @@ public class SessionActivity extends ActionBarActivity
 
         private View.OnTouchListener getRootViewOnTouchListener() {
             return new View.OnTouchListener() {
-                private boolean isCancelled;
-                private float startX;
-                private float startY;
-
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
-                            rootView.setBackgroundColor(res.getColor(R.color.lt_gray));
-                            isCancelled = false;
-                            startX = event.getRawX();
-                            startY = event.getRawY();
-                            break;
-                        case MotionEvent.ACTION_MOVE:
-                            if (ViewUtil.shouldCancel(res, event, startX, startY)) {
-                                rootView.setBackgroundColor(res.getColor(R.color.white));
-                                isCancelled = true;
-                            }
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            rootView.setBackgroundColor(res.getColor(R.color.white));
-                            if (isCancelled) {
-                                break;
-                            }
                             timerHandler.removeCallbacks(timerRunnable);
                             startButton.setVisibility(View.VISIBLE);
                             rootView.setOnTouchListener(null);
