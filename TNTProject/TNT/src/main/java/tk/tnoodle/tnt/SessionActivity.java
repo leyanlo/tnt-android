@@ -22,6 +22,16 @@ import android.widget.TextView;
 import tk.tnoodle.tnt.util.TimeUtil;
 import tk.tnoodle.tnt.util.ViewUtil;
 
+//<<<
+import java.io.IOException;
+import java.util.SortedMap;
+
+import net.gnehzr.tnoodle.scrambles.Puzzle;
+import net.gnehzr.tnoodle.scrambles.PuzzlePlugins;
+import net.gnehzr.tnoodle.utils.BadLazyClassDescriptionException;
+import net.gnehzr.tnoodle.utils.LazyInstantiator;
+//<<<
+
 public class SessionActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
@@ -153,10 +163,26 @@ public class SessionActivity extends ActionBarActivity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
+
+            // TODO - remove
+            // Just demoing that scrambling works
+            try {
+                SortedMap<String, LazyInstantiator<Puzzle>> s = PuzzlePlugins.getScramblers();
+                LazyInstantiator<Puzzle> three = s.get("333");
+                Puzzle p = three.cachedInstance();
+                System.out.println(p.generateScramble());
+            } catch(IOException e) {
+                e.printStackTrace();
+            } catch(BadLazyClassDescriptionException e) {
+                e.printStackTrace();
+            } catch(net.gnehzr.tnoodle.utils.LazyInstantiatorException e) {
+                e.printStackTrace();
+            }
+            // TODO - remove
+
+
             res = getResources();
             rootView = inflater.inflate(R.layout.fragment_session, container, false);
-//            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-//            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
             timerView = (TextView) rootView.findViewById(R.id.timer);
             timerView.setText(TimeUtil.getString(PlaceholderFragment.this, 0));
             Typeface face = Typeface.createFromAsset(getActivity().getAssets(), "fonts/Digiface Regular.ttf");
