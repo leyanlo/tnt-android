@@ -1,3 +1,5 @@
+apply plugin: 'maven'
+
 buildscript {
     repositories {
         mavenCentral()
@@ -10,20 +12,24 @@ apply plugin: 'android'
 
 repositories {
     mavenCentral()
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/'
+    }
 }
 
 android {
-    compileSdkVersion 18
-    buildToolsVersion "18.1.1"
+    compileSdkVersion 19
+    buildToolsVersion "19"
 
     defaultConfig {
-        minSdkVersion 7
-        targetSdkVersion 18
+        minSdkVersion 8
+        targetSdkVersion 19
     }
 }
 
 dependencies {
-	compile 'com.android.support:appcompat-v7:18.0.0'
-    compile 'com.android.support:support-v4:18.0.0'
-    compile files('./libs/TNoodle-scrambles-0.7.14-22-ga55b9aa.jar')
+    compile 'com.android.support:appcompat-v7:19.0.0'
+    compile 'com.android.support:support-v4:19.0.0'
+    
+    compile 'com.github.cubing:tnoodle-android:+@aar'
 }
