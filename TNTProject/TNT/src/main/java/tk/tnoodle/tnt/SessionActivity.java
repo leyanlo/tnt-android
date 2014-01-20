@@ -170,6 +170,7 @@ public class SessionActivity extends ActionBarActivity
         public PlaceholderFragment() {
         }
 
+        int systemUiVisiblity = 0;
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
@@ -178,6 +179,20 @@ public class SessionActivity extends ActionBarActivity
 
             res = getResources();
             rootView = inflater.inflate(R.layout.fragment_session, container, false);
+            systemUiVisiblity = View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+            rootView.setSystemUiVisibility(systemUiVisiblity);
+            rootView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+                @Override
+                public void onSystemUiVisibilityChange(int visibility) {
+                    boolean fullscreen = (visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) != 0;
+                    if(!fullscreen) {
+                        stopTimerIfRunning();
+                    } else {
+                        // Do nothing, we probably just started the timer and entered fullscreen mode
+                    }
+                }
+            });
+
             timerView = (TextView) rootView.findViewById(R.id.timer);
             timerView.setText(TimeUtil.getString(PlaceholderFragment.this, 0));
             Typeface face = Typeface.createFromAsset(getActivity().getAssets(), "fonts/Digiface Regular.ttf");
@@ -267,6 +282,7 @@ public class SessionActivity extends ActionBarActivity
                             timerHandler.postDelayed(timerRunnable, 0);
                             getActivity().getWindow()
                                     .addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                            rootView.setSystemUiVisibility(systemUiVisiblity | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
                             startButton.setVisibility(View.INVISIBLE);
                             doScramble();
                             rootView.setOnTouchListener(getRootViewOnTouchListener());
@@ -277,17 +293,21 @@ public class SessionActivity extends ActionBarActivity
             };
         }
 
+        private void stopTimerIfRunning() {
+            timerHandler.removeCallbacks(timerRunnable);
+            getActivity().getWindow()
+                    .clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            startButton.setVisibility(View.VISIBLE);
+            rootView.setOnTouchListener(null);
+        }
+
         private View.OnTouchListener getRootViewOnTouchListener() {
             return new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
-                            timerHandler.removeCallbacks(timerRunnable);
-                            getActivity().getWindow()
-                                    .clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                            startButton.setVisibility(View.VISIBLE);
-                            rootView.setOnTouchListener(null);
+                            stopTimerIfRunning();
                             break;
                     }
                     return true;
