@@ -265,6 +265,8 @@ public class SessionActivity extends ActionBarActivity
                             }
                             startTime = System.currentTimeMillis();
                             timerHandler.postDelayed(timerRunnable, 0);
+                            getActivity().getWindow()
+                                    .addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                             startButton.setVisibility(View.INVISIBLE);
                             doScramble();
                             rootView.setOnTouchListener(getRootViewOnTouchListener());
@@ -282,6 +284,8 @@ public class SessionActivity extends ActionBarActivity
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
                             timerHandler.removeCallbacks(timerRunnable);
+                            getActivity().getWindow()
+                                    .clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                             startButton.setVisibility(View.VISIBLE);
                             rootView.setOnTouchListener(null);
                             break;
@@ -298,5 +302,4 @@ public class SessionActivity extends ActionBarActivity
                     getArguments().getInt(ARG_SECTION_NUMBER));
         }
     }
-
 }
