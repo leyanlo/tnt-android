@@ -30,4 +30,20 @@
         android:textColor="@color/white"
         android:text="@string/start_button" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Scramble text"
+        android:id="@+id/scrambleText"
+        android:layout_alignBottom="@+id/timer"
+        android:layout_centerHorizontal="true" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/scrambleImage"
+        android:layout_above="@+id/scrambleText"
+        android:layout_centerHorizontal="true" />
+
 </RelativeLayout>
